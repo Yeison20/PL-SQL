@@ -1,0 +1,86 @@
+Aqui hay 3 tipos de ejercicios que hacen los mismo pero con diferente metodos 
+
+Cree un bloque al que se le ingresa un número correspondiente al top-n que se quiere ver sobre 
+todos los sueldos de los empleados. El proceso debe llenar una tabla temporal que mantenga todos los sueldos
+de los empleados. Si se ingresa el número 16, corresponderá a los mejores 16 sueldos en forma descendente. 
+Se deben descartar los repetidos.
+
+El ejerccio lo desarrollamos con 
+- tabla temporal 
+- TYTE TABLE INDEX BY BINARY_INTEGER
+- TYPE VARRAY
+
+/----------------------------------------------------------------------------------------------------------------------------------------------/
+1. TABLA TEMPORAL
+
+-- Creamos la tabla 
+create table top_salaries(salary number(10));
+
+--Desarrollo del bloque plsql
+DECLARE
+ 	num NUMBER(3) := &valor;
+ 	sal employees.salary%TYPE;
+ 
+	CURSOR emp_cursor IS
+ 	    SELECT distinct salary
+ 	    FROM employees
+            ORDER BY salary DESC;
+BEGIN
+ 	OPEN emp_cursor;
+ 	FETCH emp_cursor INTO sal;
+ 	WHILE emp_cursor%ROWCOUNT <= num AND emp_cursor%FOUND
+ 	LOOP
+ 	INSERT INTO top_salaries (salary)
+ 	VALUES (sal);
+	FETCH emp_cursor INTO sal;
+ 	END LOOP;
+ 	CLOSE emp_cursor;
+END;
+
+
+/----------------------------------------------------------------------------------------------------------------------------------------------/
+
+2.  TYTE TABLE INDEX BY BINARY_INTEGER
+
+DECLARE
+   TYPE table_salary IS TABLE OF employees.salary%TYPE
+       INDEX BY BINARY_INTEGER;
+   my_table_salary   table_salary;
+    n BINARY_INTEGER := 0;
+    i BINARY_INTEGER;
+    num integer:= &valor;
+BEGIN
+   FOR emp_rec IN (SELECT distinct salary FROM employees 
+   order by salary desc FETCH FIRST num ROWS ONLY) LOOP
+      n := n + 1;
+      my_table_salary(n) := emp_rec.salary;
+    END LOOP;
+    
+    FOR i IN my_table_salary.FIRST..my_table_salary.LAST LOOP
+     DBMS_OUTPUT.PUT_LINE(my_table_salary(i));
+    END LOOP;  
+END;
+
+/----------------------------------------------------------------------------------------------------------------------------------------------/
+
+3.  TYPE VARRAY
+
+DECALRE 
+    type salary_type  is varray(10) of employees.salary%type;
+    last_salary_varray salary_type := salary_type();
+    v_counter integer:= 1;  
+    num integer:= &valor;
+BEGIN
+     FOR emp_rec IN (SELECT distinct salary FROM employees 
+            order by salary desc FETCH FIRST num ROWS ONLY) LOOP
+            last_salary_varray.extend;
+   l        ast_salary_varray(v_counter):= emp_rec.salary;
+            v_counter:= v_counter +1;
+    END LOOP;
+    
+    FOR i IN last_salary_varray.FIRST..last_salary_varray.LAST LOOP
+          DBMS_OUTPUT.PUT_LINE(last_salary_varray(i));
+    END LOOP;
+END;
+
+
