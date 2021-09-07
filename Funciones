@@ -1,0 +1,78 @@
+1. Construya una función almacenada que calcule la nómina por departamento, 
+   este valor entra como parámetro a la función.
+
+CREATE OR REPLACE FUNCTION get_sal_dep 
+    (p_dep IN employees.department_id%TYPE)
+RETURN NUMBER IS
+    v_salary employees.salary%TYPE :=0;
+BEGIN
+    SELECT sum(salary) INTO v_salary
+    FROM employees WHERE department_id = p_dep;
+    RETURN (v_salary*12);
+END get_sal; 
+
+/* prueba */
+SELECT get_sal(20) FROM dual;
+
+/----------------------------------------------------------------------------------------------------------------------------------------------------/
+
+2. Construya una función llamada comp_anual, la cual calcula y retorna lo ganado en un año por un empleado.
+   Como entrada se debe conocer el salario mensual y la comisión. El cálculo se hace con la siguiente fórmula:
+   (salary*12) + (commission_pct*salary*12)
+
+  En algún caso uno o ambos valores pueden ser nulos, lo cual de todas aneras debe retornar un valor válido.
+  Cero en el peor de los casos. Use esta función con la tabla employees, para los empleados que pertenecen
+  al departamento 80, debe mostrar: employee_id, last_name y anual_compensation.
+  
+CREATE OR REPLACE FUNCTION comp_anual
+    (v_salary in employees.salary%type, v_commission in employees.commission_pct%type) 
+return number is
+    v_annual_salary employees.salary%type;
+BEGIN
+  if (v_salary is not null) and (v_commission is not null) then
+     v_annual_salary := (v_salary*12) + (v_commission*v_salary*12);
+  else
+     v_annual_salary := 0.0;
+  end if;
+  return v_annual_salary;
+END comp_anual;
+
+/* probar la funcion */
+SELECT employee_id, last_name, 
+           comp_anual(salary,commission_pct) "Annual Compensation"
+FROM employees
+WHERE department_id=80;
+
+/----------------------------------------------------------------------------------------------------------------------------------------------------/
+
+3. Crear una funcion y volverla sinonimo publico
+
+-- Cree una función para saber el salario promedio de un departamento
+
+CREATE OR REPLACE FUNCTION prom_salary
+    (p_dep_id in departments.department_id%TYPE)
+return number is
+    v_prom_salary number;
+    v_salary employees.salary%TYPE :=0;
+BEGIN
+    select avg(sum(salary)) into v_prom_salary
+    from employees where department_id = p_dep_id
+    group by department_id;
+    return v_prom_salary;
+END;
+
+-- Ahora haciendo otra prueba crearemos un nuevo sinónimo desde el usuario hr llamado prom_salary1. 
+-- Lo primero es darle permisos para crear sinónimos públicos desde el usuario administrador:
+
+GRANT CREATE PUBLIC SYNONYM TO hr;
+
+-- Ahora procedemos a conectarnos con hr y crear el sinónimo publico
+CREATE PUBLIC SYNONYM prom_salary1 FOR prom_salary;
+
+-- Ahora nos conectamos con pepito y probamos que desde otro usuario accedemos a la función que en este caso llamamos prom_salary1.
+
+SELECT prom_salary1(50) FROM DUAL;
+
+
+/----------------------------------------------------------------------------------------------------------------------------------------------------/
+
