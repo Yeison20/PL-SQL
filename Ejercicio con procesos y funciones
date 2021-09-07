@@ -1,0 +1,96 @@
+Ejercicio para saber cuantos meses trabjo un empleado en un trabajo y cuanto dinero obtuvo.
+
+- se necesita saber la cantidad de meses trabajados en un trabajo se realizo una función 
+- para saber el salario promedio del trabajo se calculo en una función (minSalary + maxSalary) / 2 
+- se realizo un proceso para multiplicar los meses trabajados po el promedio del salario, 
+  ya con esto sabemos cuanto dinero gano un empleado en cada trabajo
+
+
+
+/*funcion para calcular la cantidad de meses*/
+
+CREATE OR REPLACE FUNCTION getMonths (fecha_inicio in job_history.start_date%TYPE , fecha_final in job_history.end_date%TYPE)
+    return number 
+    is 
+BEGIN 
+    return months_between(fecha_final, fecha_inicio);
+END getMonths;
+
+/*probar*/
+select getMonths('03/09/20', SYSDATE) from dual;
+
+/*function para calcular el promedio del trabajo*/
+CREATE OR REPLACE FUNCTION promJob (jobId in jobs.job_id%TYPE)
+    return number
+    is
+    v_salaryMin jobs.min_salary%TYPE;
+    v_salaryMax jobs.max_salary%TYPE;
+BEGIN
+    select min_salary, max_salary into v_salaryMin, v_salaryMax
+    from jobs
+    where job_id = jobId;
+    return (v_salaryMin + v_salaryMax)/2; 
+END promJob;
+
+/*probar*/
+select promJob('SA_REP') from dual;
+
+/*Prcedimiento*/
+
+CREATE OR REPLACE PROCEDURE processSalaryEmp (p_id in employees.employee_id%TYPE)
+is
+    cursor c_historyId is
+        select * 
+        from job_history
+        where employee_id = p_id;
+    
+    cursor c_existHistory is
+        select employee_id, job_id, hire_date 
+        from employees
+        where employee_id 
+        in (select employee_id from job_history where employee_id = p_id);
+        
+        numberMonths number;
+        promSal number;
+        total number:= 0;
+BEGIN
+    for emp_rec in c_historyId loop
+        numberMonths:= getMonths(emp_rec.start_date, emp_rec.end_date);
+        promSal:=  promJob(emp_rec.job_id);
+         DBMS_OUTPUT.PUT_LINE('Meses trabajados en:  ' || emp_rec.job_id || ' fueron : ' || round(numberMonths) || ' meses');
+         DBMS_OUTPUT.PUT_LINE('Promedio del salario para: ' || emp_rec.job_id || ' es de: $' || promSal );
+         DBMS_OUTPUT.PUT_LINE('Sueldo ganado:  $' || round(numberMonths) * promSal || chr(10));
+         total:= total + (round(numberMonths) * promSal);
+    end loop;
+    
+    for emp_rec in c_existHistory loop
+       numberMonths:= getMonths(emp_rec.hire_date, SYSDATE);
+        promSal:=  promJob(emp_rec.job_id);
+         DBMS_OUTPUT.PUT_LINE('Meses trabajados en:  ' || emp_rec.job_id || ' fueron : ' || round(numberMonths) || ' meses');
+         DBMS_OUTPUT.PUT_LINE('Promedio del salario para: ' || emp_rec.job_id || ' es de: $' || promSal);
+         DBMS_OUTPUT.PUT_LINE('Sueldo ganado:  $' || round(numberMonths) * promSal || chr(10));
+         total:= total + (round(numberMonths) * promSal);
+            
+    end loop; 
+    DBMS_OUTPUT.PUT_LINE('El total del sueldo ganado hasta ahora fue:  $' || total);
+END processSalaryEmp;
+
+/* para comprar el ejercicio */
+
+SET SERVEROUTPUT ON
+BEGIN
+      processSalaryEmp(101);
+END;
+
+SET SERVEROUTPUT ON
+BEGIN
+      processSalaryEmp(176);
+END;
+
+SET SERVEROUTPUT ON
+BEGIN
+      processSalaryEmp(100);
+END;
+
+
+
