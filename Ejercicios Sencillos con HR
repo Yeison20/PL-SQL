@@ -1,0 +1,38 @@
+1. Construya un bloque de pl/sql para saber cuantos objetos tiene HR.
+
+DECLARE
+    numero_obejetos number;
+BEGIN
+    select count(*)
+    into numero_obejetos
+    from user_objects;
+    DBMS_OUTPUT.PUT_LINE('HR contiene ' || numero_obejetos || ' objetos');
+END;
+
+2. Construya un bloque de pl/sql para saber el nombre del dia correpondiente al dia de una fecha.
+
+declare
+    fecha varchar2(2) := '&dia';
+    fecha_completa varchar2(25) := fecha || '/08/21';
+    nombreDia varchar2(25);
+begin
+    SELECT to_char(TO_DATE(fecha_completa,'DD/MM/YY'),'DAY')
+    INTO nombreDia
+    FROM dual;
+    DBMS_OUTPUT.PUT_LINE(nombreDia);
+END;
+
+3. Escriba un bloque de PL/SQL que cuente en número de empleados que trabaja en cierto departamento. 
+La salida debe ser por pantalla. El código de departamento entra o se define como parámetro externo (de usuario).
+
+DECLARE 
+    cod_department number(3) := &valor;
+    cantidadEmp number(5); 
+BEGIN 
+    select count(*) into cantidadEmp
+    from employees e
+    inner join departments d
+    on e.department_id = d.department_id
+    where d.department_id = cod_department;
+    DBMS_OUTPUT.PUT_LINE('Cantidad de empleados para el departamendo: ' || cod_department || ' son  ' || cantidadEmp );
+end;
