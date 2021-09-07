@@ -1,4 +1,13 @@
-1. Construya un bloque de pl/sql para saber cuantos objetos tiene HR.
+1. Construya un bloque pl/sql para escribir un numero por teclado y mostrar el numero 
+
+DECLARE
+    numero number(10) := &valor;
+BEGIN
+    DBMS_OUTPUT.PUT_LINE(numero);
+END;
+
+
+2. Construya un bloque de pl/sql para saber cuantos objetos tiene HR.
 
 DECLARE
     numero_obejetos number;
@@ -9,20 +18,20 @@ BEGIN
     DBMS_OUTPUT.PUT_LINE('HR contiene ' || numero_obejetos || ' objetos');
 END;
 
-2. Construya un bloque de pl/sql para saber el nombre del dia correpondiente al dia de una fecha.
+3. Construya un bloque de pl/sql para saber el nombre del dia correpondiente al dia de una fecha.
 
-declare
+DECALRE
     fecha varchar2(2) := '&dia';
     fecha_completa varchar2(25) := fecha || '/08/21';
     nombreDia varchar2(25);
-begin
+BEGIN
     SELECT to_char(TO_DATE(fecha_completa,'DD/MM/YY'),'DAY')
     INTO nombreDia
     FROM dual;
     DBMS_OUTPUT.PUT_LINE(nombreDia);
 END;
 
-3. Escriba un bloque de PL/SQL que cuente en número de empleados que trabaja en cierto departamento. 
+4. Escriba un bloque de PL/SQL que cuente en número de empleados que trabaja en cierto departamento. 
 La salida debe ser por pantalla. El código de departamento entra o se define como parámetro externo (de usuario).
 
 DECLARE 
@@ -35,4 +44,51 @@ BEGIN
     on e.department_id = d.department_id
     where d.department_id = cod_department;
     DBMS_OUTPUT.PUT_LINE('Cantidad de empleados para el departamendo: ' || cod_department || ' son  ' || cantidadEmp );
-end;
+END;
+
+5.Crear un bloque de pl/sql para llenar una tabla con los numeros del 1 al 10 execto el 6 y  8.
+
+create table resultados (salida number);
+
+DECLARE
+    numero number(5) := 1;
+BEGIN 
+  for i in 1..10 loop
+    if i = 6 or i = 8 then
+      null;
+    else 
+      insert into resultados values (numero);
+      DBMS_OUTPUT.PUT_LINE(numero);
+    end if;
+    numero := numero + 1;
+  end loop;    
+END;
+
+Cree un bloque de PL/SQL que calcule el monto de la comisión de los empleados a partir de su salario,
+teniendo en cuenta los siguientes rangos:
+a. Si el salario del empleado es menor que $5,000, la cuantía de la
+comisión es del 10% de su salario.
+b. Si el salario del empleado está entre $5,000 y $10,000, la cuantía
+de la comisión es del 15% de su salario.
+c. Si el salario del empleado es superior a $10,000, la cuantía de la
+comisión es del 20% de su salario.
+d. Si el salario del empleado es NULL, la cuantía de la comisión es 0. 
+
+DECLARE 
+    v_salario employees.salary%type;
+    v_employee_id employees.employee_id%type;
+    comision number(10);
+BEGIN
+    select employee_id, salary into v_employee_id, v_salario
+    from employees
+    where employees.employee_id = &p_employees_id;
+    CASE
+        WHEN v_salario < 5000 THEN comision := v_salario * 0.10;
+        WHEN v_salario between 5000 and 10000 THEN comision :=  v_salario * 0.15;
+        WHEN v_salario > 10000 THEN comision := v_salario * 0.20;
+        ELSE comision := 0;
+    END case; 
+    DBMS_OUTPUT.PUT_LINE('id'|| '  ' || 'Salario' || '   ' || 'Comision' );
+    DBMS_OUTPUT.PUT_LINE(v_employee_id|| '   ' || v_salario || '      ' || comision );
+END;
+
