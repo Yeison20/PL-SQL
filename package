@@ -1,0 +1,36 @@
+Ejercicio para llenar tabla a través de una funcion 
+
+
+CREATE OR REPLACE PACKAGE emp_package
+IS
+    TYPE emp_table_type IS TABLE OF employees%ROWTYPE
+    INDEX BY BINARY_INTEGER;
+    FUNCTION read_emp_table (p_emp_table out emp_table_type) return emp_table_type;
+END emp_package; 
+
+
+CREATE OR REPLACE PACKAGE BODY emp_package
+IS
+    FUNCTION read_emp_table(p_emp_table out emp_table_type)
+       return  emp_table_type IS
+        i BINARY_INTEGER := 0;
+    BEGIN
+        FOR emp_record IN (SELECT * FROM employees) LOOP
+            p_emp_table(i) := emp_record;
+            i:= i+1;
+        END LOOP;
+       return p_emp_table;
+    END read_emp_table;
+    
+END emp_package; 
+
+SET SERVEROUTPUT ON
+DECLARE
+v_datos emp_package.emp_table_type;
+v_emp_table emp_package.emp_table_type;
+BEGIN
+v_datos:= emp_package.read_emp_table(v_emp_table);
+FOR i IN 1..10 LOOP
+ DBMS_OUTPUT.PUT_LINE('Last Name: '||v_datos(i).last_name);
+END LOOP;
+END; 
