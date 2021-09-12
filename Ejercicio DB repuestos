@@ -1,0 +1,42 @@
+trigger que al ingresar una nueva compra (en tabla ventas) de una factura revise si 
+las existencias en stock son suficientes, de lo contrario falle. (llamar mínimo una función)
+select * from facturas where rownum<5;
+select * from ventas where numero=203;
+select * from productos where id_producto not in (select id from ventas where numero=203);
+insert into ventas values (603,203,30,40000);
+/* lo anterior para revisar los datos */
+
+/* obtener el stock del producto
+
+create or replace function getStock (idProducto in productos.id_producto%TYPE)
+return number is
+    v_stock productos.stock%TYPE:=0;
+begin 
+    select stock into v_stock 
+    from productos
+    where id_producto = idProducto;
+    return v_stock;
+end getStock;
+
+/* comparar el stock con la venta para revisar si son los suficientes 
+
+create or replace procedure f_comparar1(idproducto in ventas.id%TYPE, cantidad in ventas.cantidad%TYPE)
+is
+    v_stockBodega productos.stock%TYPE;
+BEGIN
+    v_stockBodega:= getStock(idproducto);
+    IF (cantidad < v_stockBodega) then 
+         RAISE_APPLICATION_ERROR(-20202,'cantidad disponible para la venta');
+    ELSE    
+        RAISE_APPLICATION_ERROR(-20202,'no hay suficiente cantidad para la venta');
+    END IF;
+END f_comparar1;
+
+
+/* disparador para cuando se realice una inserción y revisar si el stock es el suficiente
+
+create or replace trigger trg_comparar
+    after insert on ventas
+    FOR EACH ROW
+    CALL f_comparar1(:new.id, :NEW.cantidad)     
+    
