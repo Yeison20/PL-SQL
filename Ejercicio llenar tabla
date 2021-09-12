@@ -1,0 +1,38 @@
+Proceso que revise en este momento qué el stock no se baje del límite permitido, solicitando a producción que se fabrique las unidades pendientes. 
+El límite es cuando el stock de bodega está por debajo del promedio de ventas del histórico de la compañía.
+
+Se crea una tabla (produPendiente) donde se revisa cada producto, insertando los productos que deba solicitar a producción.
+los campos deben ser el código del producto, cantidad a producir.
+
+create or replace function getStock (idProducto in productos.id_producto%TYPE)
+return number is
+    v_stock productos.stock%TYPE:=0;
+begin 
+    select stock into v_stock 
+    from productos
+    where id_producto = idProducto;
+    return v_stock;
+end getStock;
+
+
+create or replace procedure llenarBodega(idpro in ventas.id%TYPE) 
+    IS 
+    v_cantidad ventas.cantidad%TYPE;
+    v_stock productos.stock%TYPE;
+    v_aux number:= 0;
+BEGIN
+    v_stock:= getStock(idpro);
+    SELECT avg(cantidad) into v_cantidad
+    FROM ventas 
+    where id = idpro;
+    
+    IF (v_stock < v_cantidad) THEN 
+        v_aux:= (round(v_cantidad) - v_stock);
+        insert into produpendiente (cod_prod, cant)
+            values(idpro, v_aux);
+    END IF;
+END llenarBodega;
+
+execute llenarBodega(618);
+
+select * from produpendiente;
